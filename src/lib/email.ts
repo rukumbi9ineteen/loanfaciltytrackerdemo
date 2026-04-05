@@ -1,0 +1,141 @@
+import { Resend } from 'resend'
+import type { Facility, Profile } from '@/types'
+import { formatDate } from './utils'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+const FROM   = process.env.RESEND_FROM_EMAIL ?? 'alerts@loan-tracker.com'
+const BANK   = process.env.NEXT_PUBLIC_BANK_NAME ?? 'Your Bank'
+
+// ─────────────────────────────────────────────
+// Build email HTML
+// ─────────────────────────────────────────────
+
+function buildEmailHtml(
+  officer: Profile,
+  expiring: Facility[],
+  expired: Facility[]
+): string {
+  const allFacilities = [...expired, ...expiring]
+
+  const tableRows = allFacilities.map(f => {
+    const isExpired = f.status === 'EXPIRED'
+    const rowBg    = isExpired ? '#fef2f2' : f.status === 'CRITICAL' ? '#fff7ed' : '#fefce8'
+    const statusColor = isExpired ? '#dc2626' : f.status === 'CRITICAL' ? '#ea580c' : '#ca8a04'
+    const daysText = isExpired
+      ? `<span style="color:#dc2626;font-weight:600">${Math.abs(f.days_remaining)}d overdue</span>`
+      : `<span style="color:${statusColor};font-weight:600">${f.days_remaining}d</span>`
+
+    return `
+      <tr style="background:${rowBg}">
+        <td style="padding:10px 14px;font-family:monospace;font-size:12px;color:#6b7280">${f.facility_ref}</td>
+        <td style="padding:10px 14px;font-weight:500;color:#111827">${f.customer_name}</td>
+        <td style="padding:10px 14px;color:#374151">${f.facility_type}</td>
+        <td style="padding:10px 14px;color:#374151">${formatDate(f.expiry_date)}</td>
+        <td style="padding:10px 14px">${daysText}</td>
+        <td style="padding:10px 14px"><span style="color:${statusColor};font-weight:600;font-size:12px">${f.status}</span></td>
+      </tr>
+    `
+  }).join('')
+
+  const expiredCount  = expired.length
+  const criticalCount = expiring.filter(f => f.status === 'CRITICAL').length
+  const warningCount  = expiring.filter(f => f.status === 'WARNING').length
+
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="max-width:700px;margin:32px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
+
+    <!-- Header -->
+    <div style="background:#1e3a8a;padding:28px 32px">
+      <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff">${BANK}</p>
+      <p style="margin:6px 0 0;font-size:14px;color:#93c5fd">Loan Facility Expiry Alert</p>
+    </div>
+
+    <!-- Greeting -->
+    <div style="padding:28px 32px 0">
+      <p style="margin:0 0 8px;font-size:15px;color:#374151">Dear <strong>${officer.full_name}</strong>,</p>
+      <p style="margin:0 0 20px;font-size:14px;color:#6b7280;line-height:1.6">
+        This is your daily facility expiry alert. The following facilities in your portfolio require immediate attention.
+      </p>
+
+      <!-- Summary pills -->
+      <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+        ${expiredCount > 0 ? `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 16px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#dc2626">${expiredCount}</p>
+          <p style="margin:2px 0 0;font-size:11px;color:#991b1b">Expired</p>
+        </div>` : ''}
+        ${criticalCount > 0 ? `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 16px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#ea580c">${criticalCount}</p>
+          <p style="margin:2px 0 0;font-size:11px;color:#9a3412">Critical (≤30d)</p>
+        </div>` : ''}
+        ${warningCount > 0 ? `<div style="background:#fefce8;border:1px solid #fef08a;border-radius:8px;padding:10px 16px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#ca8a04">${warningCount}</p>
+          <p style="margin:2px 0 0;font-size:11px;color:#713f12">Warning (≤90d)</p>
+        </div>` : ''}
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div style="padding:0 32px 28px">
+      <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <thead>
+          <tr style="background:#f9fafb">
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:600;border-bottom:1px solid #e5e7eb">Ref</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:600;border-bottom:1px solid #e5e7eb">Customer</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:600;border-bottom:1px solid #e5e7eb">Type</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:600;border-bottom:1px solid #e5e7eb">Expiry</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:600;border-bottom:1px solid #e5e7eb">Days</th>
+            <th style="padding:10px 14px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;font-weight:600;border-bottom:1px solid #e5e7eb">Status</th>
+          </tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div style="background:#f9fafb;padding:20px 32px;border-top:1px solid #e5e7eb">
+      <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.5">
+        This is an automated daily alert from ${BANK} Facility Tracker.<br>
+        Generated: ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}<br>
+        Please log into the Facility Tracker portal to renew or update these facilities.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+`
+}
+
+// ─────────────────────────────────────────────
+// Send alert for a single officer
+// ─────────────────────────────────────────────
+
+export async function sendFacilityAlert(
+  officer: Profile,
+  expiring: Facility[],
+  expired: Facility[]
+): Promise<{ success: boolean; error?: string }> {
+  const recipient = officer.alert_email || officer.email
+  const allCount  = expiring.length + expired.length
+
+  if (allCount === 0) {
+    return { success: true }  // nothing to send
+  }
+
+  const subject = `[${BANK}] Facility Alert: ${expired.length > 0 ? `${expired.length} expired, ` : ''}${expiring.filter(f => f.status === 'CRITICAL').length} critical, ${expiring.filter(f => f.status === 'WARNING').length} warning`
+
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to:   recipient,
+      subject,
+      html: buildEmailHtml(officer, expiring, expired),
+    })
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
+}
