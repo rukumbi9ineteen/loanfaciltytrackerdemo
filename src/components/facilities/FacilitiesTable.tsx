@@ -86,64 +86,64 @@ export default function FacilitiesTable({
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Ref</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Customer</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Description</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Ref</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Customer</th>
+                <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
+                <th className="hidden lg:table-cell px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Description</th>
                 {showOwner && (
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">R.O.</th>
+                  <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">R.O.</th>
                 )}
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Expiry Date</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Days Left</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Renewals</th>
-                <th className="px-4 py-3" />
+                <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Expiry Date</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Days</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Renewals</th>
+                <th className="px-3 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {facilities.map(f => (
                 <tr key={f.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500">{f.facility_ref}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900 max-w-[180px] truncate">{f.customer_name}</td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{f.facility_type}</td>
-                  <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate">{f.description ?? '—'}</td>
+                  <td className="px-3 py-3 font-mono text-xs text-gray-500">{f.facility_ref}</td>
+                  <td className="px-3 py-3 font-medium text-gray-900 max-w-[140px] truncate">{f.customer_name}</td>
+                  <td className="hidden sm:table-cell px-3 py-3 text-gray-600 whitespace-nowrap text-xs">{f.facility_type}</td>
+                  <td className="hidden lg:table-cell px-3 py-3 text-gray-500 max-w-[160px] truncate text-xs">{f.description ?? '—'}</td>
                   {showOwner && (
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="hidden md:table-cell px-3 py-3 text-gray-600 text-xs">
                       {(f as any).owner?.full_name ?? '—'}
                     </td>
                   )}
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(f.expiry_date)}</td>
-                  <td className="px-4 py-3">
+                  <td className="hidden sm:table-cell px-3 py-3 text-gray-600 whitespace-nowrap text-xs">{formatDate(f.expiry_date)}</td>
+                  <td className="px-3 py-3">
                     <span className={cn(
-                      'font-semibold text-sm',
+                      'font-semibold text-xs',
                       f.days_remaining < 0 ? 'text-red-600' :
                       f.days_remaining <= 30 ? 'text-orange-600' :
                       f.days_remaining <= 90 ? 'text-yellow-600' : 'text-green-600'
                     )}>
                       {f.days_remaining < 0
-                        ? `${Math.abs(f.days_remaining)}d overdue`
+                        ? `${Math.abs(f.days_remaining)}d OD`
                         : `${f.days_remaining}d`
                       }
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3">
                     <span className={cn(
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                      'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border',
                       STATUS_COLORS[f.status as FacilityStatus]
                     )}>
                       {f.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-500">{f.renewal_count}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2 justify-end">
+                  <td className="hidden md:table-cell px-3 py-3 text-center text-gray-500 text-xs">{f.renewal_count}</td>
+                  <td className="px-3 py-3">
+                    <div className="flex items-center gap-1.5 justify-end">
                       <Link
                         href={`/facilities/${f.id}/renew`}
                         className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap"
                         title="Renew facility"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        Renew
+                        <RotateCcw className="w-3 h-3" />
+                        <span className="hidden sm:inline">Renew</span>
                       </Link>
                       <Link
                         href={`/facilities/${f.id}`}

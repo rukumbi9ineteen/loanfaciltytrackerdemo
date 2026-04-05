@@ -119,6 +119,189 @@ function buildEmailHtml(
 }
 
 // ─────────────────────────────────────────────
+// Transfer notification email
+// ─────────────────────────────────────────────
+
+export interface TransferEmailParams {
+  recipientEmail:  string
+  recipientName:   string
+  role:            'old_owner' | 'new_owner' | 'admin'
+  actorName:       string
+  oldOwnerName:    string
+  newOwnerName:    string
+  facilityRef:     string
+  customerName:    string
+  facilityType:    string
+  appUrl:          string
+  facilityId?:     string   // for single transfer — links to the facility
+  facilityCount?:  number   // for bulk transfer
+}
+
+function buildTransferEmailHtml(p: TransferEmailParams): string {
+  const isBulk   = (p.facilityCount ?? 1) > 1
+  const subject2 = isBulk
+    ? `${p.facilityCount} facilities transferred`
+    : `${p.customerName} (${p.facilityRef}) transferred`
+
+  const roleMessage = {
+    old_owner: `The following facilit${isBulk ? 'ies have' : 'y has'} been <strong>removed from your portfolio</strong> and reassigned to <strong>${p.newOwnerName}</strong>.`,
+    new_owner: `The following facilit${isBulk ? 'ies have' : 'y has'} been <strong>added to your portfolio</strong> from <strong>${p.oldOwnerName}</strong>.`,
+    admin:     `<strong>${p.actorName}</strong> transferred facilit${isBulk ? 'ies' : 'y'} from <strong>${p.oldOwnerName}</strong> to <strong>${p.newOwnerName}</strong>.`,
+  }[p.role]
+
+  const facilityBlock = isBulk
+    ? `<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:14px 18px;margin:0 0 20px">
+        <p style="margin:0;font-size:28px;font-weight:700;color:#0369a1">${p.facilityCount}</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#0c4a6e">Facilities transferred</p>
+       </div>`
+    : `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;margin:0 0 20px">
+        <p style="margin:0;font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:600;letter-spacing:.05em">Facility</p>
+        <p style="margin:6px 0 2px;font-size:16px;font-weight:700;color:#0f172a">${p.customerName}</p>
+        <p style="margin:0;font-size:12px;color:#64748b;font-family:monospace">${p.facilityRef} &nbsp;·&nbsp; ${p.facilityType}</p>
+       </div>`
+
+  const ctaButton = (p.facilityId && !isBulk)
+    ? `<div style="text-align:center;margin:24px 0">
+         <a href="${p.appUrl}/facilities/${p.facilityId}"
+            style="background:#034EA2;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 28px;border-radius:8px;display:inline-block">
+           View Facility →
+         </a>
+       </div>`
+    : `<div style="text-align:center;margin:24px 0">
+         <a href="${p.appUrl}/facilities"
+            style="background:#034EA2;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 28px;border-radius:8px;display:inline-block">
+           View My Portfolio →
+         </a>
+       </div>`
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="max-width:560px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1)">
+
+    <div style="background:#011B39;padding:24px 32px">
+      <p style="margin:0;font-size:18px;font-weight:700;color:#fff">${BANK}</p>
+      <p style="margin:4px 0 0;font-size:13px;color:#93c5fd">Facility Transfer Notification</p>
+    </div>
+
+    <div style="padding:28px 32px">
+      <p style="margin:0 0 12px;font-size:15px;color:#374151">Dear <strong>${p.recipientName}</strong>,</p>
+      <p style="margin:0 0 20px;font-size:14px;color:#6b7280;line-height:1.6">${roleMessage}</p>
+
+      ${facilityBlock}
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
+        <tr>
+          <td style="padding:8px 0;font-size:12px;color:#94a3b8;width:40%">Transferred from</td>
+          <td style="padding:8px 0;font-size:13px;font-weight:600;color:#0f172a">${p.oldOwnerName}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;font-size:12px;color:#94a3b8">Transferred to</td>
+          <td style="padding:8px 0;font-size:13px;font-weight:600;color:#0f172a">${p.newOwnerName}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;font-size:12px;color:#94a3b8">Action by</td>
+          <td style="padding:8px 0;font-size:13px;color:#374151">${p.actorName}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;font-size:12px;color:#94a3b8">Date</td>
+          <td style="padding:8px 0;font-size:13px;color:#374151">${new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}</td>
+        </tr>
+      </table>
+
+      ${ctaButton}
+    </div>
+
+    <div style="background:#f9fafb;padding:16px 32px;border-top:1px solid #e5e7eb">
+      <p style="margin:0;font-size:11px;color:#9ca3af">
+        This is an automated message from ${BANK} Facility Tracker. Please do not reply.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`
+}
+
+/**
+ * Send transfer notification emails to old owner, new owner, and all admins.
+ * Each gets a personalised message based on their role.
+ */
+export async function sendTransferEmails(params: {
+  actorName:    string
+  oldOwner:     { email: string; alert_email: string | null; full_name: string }
+  newOwner:     { email: string; alert_email: string | null; full_name: string }
+  admins:       { email: string; alert_email: string | null; full_name: string; id: string }[]
+  oldOwnerId:   string
+  newOwnerId:   string
+  // Single transfer
+  facilityRef?:    string
+  customerName?:   string
+  facilityType?:   string
+  facilityId?:     string
+  // Bulk transfer
+  facilityCount?:  number
+}): Promise<void> {
+  const appUrl    = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const isBulk    = (params.facilityCount ?? 1) > 1
+  const ref       = params.facilityRef  ?? `${params.facilityCount} facilities`
+  const customer  = params.customerName ?? `${params.facilityCount} facilities`
+  const facType   = params.facilityType ?? ''
+
+  const base: Omit<TransferEmailParams, 'recipientEmail' | 'recipientName' | 'role'> = {
+    actorName:    params.actorName,
+    oldOwnerName: params.oldOwner.full_name,
+    newOwnerName: params.newOwner.full_name,
+    facilityRef:  ref,
+    customerName: customer,
+    facilityType: facType,
+    facilityId:   params.facilityId,
+    facilityCount: params.facilityCount,
+    appUrl,
+  }
+
+  const subjectSuffix = isBulk
+    ? `${params.facilityCount} Facilit${params.facilityCount === 1 ? 'y' : 'ies'} Transferred`
+    : `Facility Transfer: ${customer} (${ref})`
+
+  // Build recipient list: old owner, new owner, admins (dedup by email)
+  type Recipient = { email: string; name: string; role: TransferEmailParams['role'] }
+  const recipients: Recipient[] = []
+
+  recipients.push({
+    email: params.oldOwner.alert_email || params.oldOwner.email,
+    name:  params.oldOwner.full_name,
+    role:  'old_owner',
+  })
+  recipients.push({
+    email: params.newOwner.alert_email || params.newOwner.email,
+    name:  params.newOwner.full_name,
+    role:  'new_owner',
+  })
+
+  // Add admins who are not already the old/new owner
+  for (const admin of params.admins) {
+    const adminEmail = admin.alert_email || admin.email
+    const alreadyAdded = recipients.some(r => r.email === adminEmail)
+    if (!alreadyAdded) {
+      recipients.push({ email: adminEmail, name: admin.full_name, role: 'admin' })
+    }
+  }
+
+  // Send all emails (fire-and-forget per recipient, don't block on failures)
+  await Promise.allSettled(
+    recipients.map(r =>
+      resend.emails.send({
+        from:    FROM,
+        to:      r.email,
+        subject: `[${BANK}] ${subjectSuffix}`,
+        html:    buildTransferEmailHtml({ ...base, recipientEmail: r.email, recipientName: r.name, role: r.role }),
+      })
+    )
+  )
+}
+
+// ─────────────────────────────────────────────
 // Send alert for a single officer
 // ─────────────────────────────────────────────
 

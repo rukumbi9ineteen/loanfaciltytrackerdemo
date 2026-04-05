@@ -40,19 +40,20 @@ export default async function FacilitiesPage({
   return (
     <div className="max-w-7xl mx-auto space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Facilities</h1>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Facilities</h1>
           <p className="text-gray-500 text-sm mt-0.5">
             {facilities.length} facilit{facilities.length === 1 ? 'y' : 'ies'} in your portfolio
           </p>
         </div>
         <Link
           href="/facilities/add"
-          className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-medium text-sm px-4 py-2.5 rounded-lg transition-colors"
+          className="inline-flex items-center gap-1.5 md:gap-2 bg-blue-700 hover:bg-blue-800 text-white font-medium text-sm px-3 md:px-4 py-2.5 rounded-lg transition-colors flex-shrink-0"
         >
           <Plus className="w-4 h-4" />
-          Add Facility
+          <span className="hidden sm:inline">Add Facility</span>
+          <span className="sm:hidden">Add</span>
         </Link>
       </div>
 

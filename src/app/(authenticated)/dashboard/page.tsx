@@ -46,15 +46,15 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 text-sm mt-0.5">
             Welcome back, {profile?.full_name?.split(' ')[0]}.
             Here&apos;s your portfolio at a glance.
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-left sm:text-right">
           <p className="text-xs text-gray-400">Today</p>
           <p className="text-sm font-medium text-gray-700">
             {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -106,9 +106,9 @@ export default async function DashboardPage() {
       {/* Expiring soon table */}
       {expiring.length > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-gray-900">Expiring in the Next 90 Days</h2>
-            <a href="/facilities" className="text-sm text-blue-600 hover:underline">View all →</a>
+          <div className="flex items-center justify-between mb-3 gap-2">
+            <h2 className="font-semibold text-gray-900 text-sm md:text-base">Expiring in the Next 90 Days</h2>
+            <a href="/facilities" className="text-xs md:text-sm text-blue-600 hover:underline whitespace-nowrap">View all →</a>
           </div>
           <ExpiryTable facilities={expiring} showOwner={profile?.role === 'admin'} />
         </div>

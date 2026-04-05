@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
-import { Eye, EyeOff, Lock } from 'lucide-react'
+import { Eye, EyeOff, Lock, CheckCircle2 } from 'lucide-react'
 
 const schema = z.object({
   email:    z.string().email('Enter a valid email address'),
@@ -16,11 +16,15 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export default function LoginPage() {
-  const router = useRouter()
-  const supabase = createClient()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const supabase     = createClient()
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError]   = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  const message = searchParams.get('message')
+  const sessionExpired = searchParams.get('reason') === 'session_expired'
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -71,9 +75,23 @@ export default function LoginPage() {
             <Image src="/bk_logo.jpeg" alt="Bk Logo" width={140} height={42} />
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-8">
             <h2 className="text-2xl font-bold mb-1" style={{ color: '#011B39' }}>Welcome back</h2>
             <p className="text-gray-500 text-sm mb-6">Sign in to your account to continue</p>
+
+            {message === 'password_changed' && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                Password updated successfully. Please sign in with your new password.
+              </div>
+            )}
+
+            {sessionExpired && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm flex items-center gap-2">
+                <Lock className="w-4 h-4 flex-shrink-0" />
+                Your session expired due to inactivity. Please sign in again.
+              </div>
+            )}
 
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">

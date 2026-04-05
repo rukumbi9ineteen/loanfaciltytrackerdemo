@@ -15,16 +15,16 @@ export default function ExpiryTable({ facilities, showOwner, highlight }: Props)
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Ref</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Customer</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
+              <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Ref</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Customer</th>
+              <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
               {showOwner && (
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">R.O.</th>
+                <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">R.O.</th>
               )}
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Expiry Date</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Days Left</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
-              <th className="px-4 py-3" />
+              <th className="hidden sm:table-cell px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Expiry Date</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Days</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+              <th className="px-3 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -36,37 +36,37 @@ export default function ExpiryTable({ facilities, showOwner, highlight }: Props)
                   highlight === 'expired' && 'bg-red-50/30'
                 )}
               >
-                <td className="px-4 py-3 font-mono text-xs text-gray-500">{f.facility_ref}</td>
-                <td className="px-4 py-3 font-medium text-gray-900">{f.customer_name}</td>
-                <td className="px-4 py-3 text-gray-600">{f.facility_type}</td>
+                <td className="hidden sm:table-cell px-3 py-3 font-mono text-xs text-gray-500">{f.facility_ref}</td>
+                <td className="px-3 py-3 font-medium text-gray-900 text-xs max-w-[130px] truncate">{f.customer_name}</td>
+                <td className="hidden sm:table-cell px-3 py-3 text-gray-600 text-xs">{f.facility_type}</td>
                 {showOwner && (
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="hidden md:table-cell px-3 py-3 text-gray-600 text-xs">
                     {(f as any).owner?.full_name ?? '—'}
                   </td>
                 )}
-                <td className="px-4 py-3 text-gray-600">{formatDate(f.expiry_date)}</td>
-                <td className="px-4 py-3">
+                <td className="hidden sm:table-cell px-3 py-3 text-gray-600 text-xs whitespace-nowrap">{formatDate(f.expiry_date)}</td>
+                <td className="px-3 py-3">
                   <span className={cn(
-                    'font-semibold',
+                    'font-semibold text-xs',
                     f.days_remaining < 0 ? 'text-red-600' :
                     f.days_remaining <= 30 ? 'text-orange-600' :
                     'text-yellow-600'
                   )}>
-                    {f.days_remaining < 0 ? `${Math.abs(f.days_remaining)}d overdue` : `${f.days_remaining}d`}
+                    {f.days_remaining < 0 ? `${Math.abs(f.days_remaining)}d OD` : `${f.days_remaining}d`}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-3 py-3">
                   <span className={cn(
-                    'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                    'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border',
                     STATUS_COLORS[f.status]
                   )}>
                     {f.status}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-3 py-3 text-right">
                   <Link
                     href={`/facilities/${f.id}`}
-                    className="text-xs text-blue-600 hover:underline font-medium"
+                    className="text-xs text-blue-600 hover:underline font-medium whitespace-nowrap"
                   >
                     View →
                   </Link>

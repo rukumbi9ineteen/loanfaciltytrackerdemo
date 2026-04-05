@@ -25,7 +25,13 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Settings',    href: '/settings',   icon: Settings },
 ]
 
-export default function Sidebar({ role }: { role: UserRole }) {
+export default function Sidebar({
+  role,
+  onClose,
+}: {
+  role: UserRole
+  onClose?: () => void
+}) {
   const pathname = usePathname()
   const visibleItems = NAV_ITEMS.filter(item => !item.adminOnly || role === 'admin')
 
@@ -55,6 +61,7 @@ export default function Sidebar({ role }: { role: UserRole }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group',
                 isActive

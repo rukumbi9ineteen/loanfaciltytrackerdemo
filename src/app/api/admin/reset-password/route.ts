@@ -45,6 +45,10 @@ export async function POST(request: NextRequest) {
 
   const resetLink = linkData.properties.action_link
 
+  // Immediately revoke all active sessions for the target user so they
+  // are forced to use the reset link (no stale sessions remain valid)
+  await serviceClient.auth.admin.signOut(target_user_id, 'global')
+
   // Send via Resend
   const { error: emailError } = await resend.emails.send({
     from: FROM,

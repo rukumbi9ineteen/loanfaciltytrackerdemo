@@ -55,12 +55,12 @@ export default async function AdminPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Admin Panel</h1>
           <p className="text-gray-500 text-sm mt-0.5">Manage users and monitor the entire portfolio</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <SendAlertsButton />
           <Link
             href="/admin/users/create"
@@ -68,7 +68,8 @@ export default async function AdminPage() {
             style={{ background: '#034EA2' }}
           >
             <Plus className="w-4 h-4" />
-            Create User
+            <span className="hidden sm:inline">Create User</span>
+            <span className="sm:hidden">New</span>
           </Link>
         </div>
       </div>

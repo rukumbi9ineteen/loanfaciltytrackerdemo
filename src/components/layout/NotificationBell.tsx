@@ -8,10 +8,11 @@ import { cn } from '@/lib/utils'
 import type { Notification } from '@/types'
 
 const TYPE_ICONS: Record<Notification['type'], string> = {
-  facility_added:   '➕',
-  facility_renewed: '🔄',
-  facility_deleted: '🗑️',
-  alert_sent:       '📧',
+  facility_added:      '➕',
+  facility_renewed:    '🔄',
+  facility_deleted:    '🗑️',
+  alert_sent:          '📧',
+  facility_transferred:'🔀',
 }
 
 export default function NotificationBell({ userId }: { userId: string }) {

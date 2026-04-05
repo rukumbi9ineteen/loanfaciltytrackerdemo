@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
+// GET — fetch all notifications for current user
+export async function GET() {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ data: data ?? [] })
+}
+
 // POST — create a notification (internal use)
 export async function POST(request: NextRequest) {
   const body = await request.json()
@@ -26,6 +42,25 @@ export async function PATCH() {
     .update({ is_read: true })
     .eq('user_id', user.id)
     .eq('is_read', false)
+
+  return NextResponse.json({ success: true })
+}
+
+// DELETE — clear read notifications (pass ?all=true to clear everything)
+export async function DELETE(request: NextRequest) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { searchParams } = new URL(request.url)
+  const clearAll = searchParams.get('all') === 'true'
+
+  const query = supabase.from('notifications').delete().eq('user_id', user.id)
+  if (clearAll) {
+    await query
+  } else {
+    await query.eq('is_read', true)
+  }
 
   return NextResponse.json({ success: true })
 }

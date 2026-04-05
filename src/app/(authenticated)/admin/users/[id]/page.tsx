@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
-import { formatDate, formatDateTime } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import AdminUserEditForm from '@/components/admin/AdminUserEditForm'
+import TransferAllFacilitiesButton from '@/components/admin/TransferAllFacilitiesButton'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,49 +31,70 @@ export default async function AdminUserDetailPage({ params }: { params: { id: st
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <a href="/admin" className="text-sm text-gray-500 hover:text-gray-700">← Back to Admin</a>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">{targetProfile.full_name}</h1>
-        <p className="text-gray-500 text-sm mt-0.5">{targetProfile.email}</p>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mt-2 truncate">{targetProfile.full_name}</h1>
+        <p className="text-gray-500 text-sm mt-0.5 truncate">{targetProfile.email}</p>
       </div>
 
       <AdminUserEditForm profile={targetProfile} />
 
       {/* Facilities summary */}
       <div>
-        <h2 className="font-semibold text-gray-900 mb-3">
-          Portfolio ({facilities.length} facilit{facilities.length === 1 ? 'y' : 'ies'})
-        </h2>
+        <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+          <h2 className="font-semibold text-gray-900">
+            Portfolio ({facilities.length} facilit{facilities.length === 1 ? 'y' : 'ies'})
+          </h2>
+
+          {/* Bulk transfer — shown only when this R.O. has facilities */}
+          <TransferAllFacilitiesButton
+            fromOwnerId={targetProfile.id}
+            fromOwnerName={targetProfile.full_name}
+            facilityCount={facilities.length}
+          />
+        </div>
+
         {facilities.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center text-gray-400 text-sm">
             No facilities yet.
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Ref</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Customer</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Expiry</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {facilities.map((f: any) => (
-                  <tr key={f.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-500">{f.facility_ref}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900">{f.customer_name}</td>
-                    <td className="px-4 py-3 text-gray-600">{formatDate(f.expiry_date)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs font-semibold ${
-                        f.status === 'EXPIRED'  ? 'text-red-600' :
-                        f.status === 'CRITICAL' ? 'text-orange-600' :
-                        f.status === 'WARNING'  ? 'text-yellow-600' : 'text-green-600'
-                      }`}>{f.status}</span>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Ref</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Customer</th>
+                    <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Expiry</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                    <th className="px-4 py-3" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {facilities.map((f: any) => (
+                    <tr key={f.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 font-mono text-xs text-gray-500">{f.facility_ref}</td>
+                      <td className="px-4 py-3 font-medium text-gray-900 max-w-[160px] truncate">{f.customer_name}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-gray-600 text-xs">{formatDate(f.expiry_date)}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-semibold ${
+                          f.status === 'EXPIRED'  ? 'text-red-600' :
+                          f.status === 'CRITICAL' ? 'text-orange-600' :
+                          f.status === 'WARNING'  ? 'text-yellow-600' : 'text-green-600'
+                        }`}>{f.status}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Link
+                          href={`/facilities/${f.id}`}
+                          className="text-xs text-blue-600 hover:underline font-medium"
+                        >
+                          View →
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

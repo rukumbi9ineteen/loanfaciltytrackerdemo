@@ -60,7 +60,7 @@ export interface Notification {
   user_id: string
   title: string
   body: string
-  type: 'facility_added' | 'facility_renewed' | 'facility_deleted' | 'alert_sent'
+  type: 'facility_added' | 'facility_renewed' | 'facility_deleted' | 'alert_sent' | 'facility_transferred'
   facility_id: string | null
   is_read: boolean
   created_at: string
