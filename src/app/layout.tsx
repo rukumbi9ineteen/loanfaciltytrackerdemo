@@ -6,15 +6,16 @@ import { Toaster } from '@/components/ui/toaster'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Loan Facility Tracker',
-  description: 'Track and manage loan facility expiration dates for Relationship Officers',
+  title: 'BK Loan Facility Tracker',
+  description: 'Loan Facility Expiration Tracker for Relationship Officers',
+  icons: {
+    icon: '/bk_logo.jpeg',
+    shortcut: '/bk_logo.jpeg',
+    apple: '/bk_logo.jpeg',
+  },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>

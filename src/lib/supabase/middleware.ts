@@ -31,6 +31,7 @@ export async function updateSession(request: NextRequest) {
   // Protect all routes except /login and /api/cron
   const isPublicPath =
     request.nextUrl.pathname.startsWith('/login') ||
+    request.nextUrl.pathname.startsWith('/auth/') ||
     request.nextUrl.pathname.startsWith('/api/cron')
 
   if (!user && !isPublicPath) {

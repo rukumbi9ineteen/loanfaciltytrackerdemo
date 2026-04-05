@@ -42,22 +42,12 @@ const config: Config = {
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
         },
-        popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
-        },
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
-        },
-        // Bank brand colors
-        bank: {
-          50:  '#eff6ff',
-          100: '#dbeafe',
-          500: '#1d4ed8',
-          600: '#1e40af',
-          700: '#1e3a8a',
-          900: '#1e3a8a',
+        // Brand palette
+        brand: {
+          blue:    '#034EA2',   // primary blue
+          navy:    '#011B39',   // dark navy
+          amber:   '#EB9C20',   // accent amber/gold
+          surface: '#F4F5F8',   // light background
         },
       },
       borderRadius: {

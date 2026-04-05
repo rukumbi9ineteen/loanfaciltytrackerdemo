@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import AdminUserCard from '@/components/admin/AdminUserCard'
 import AdminStatsBar from '@/components/admin/AdminStatsBar'
+import SendAlertsButton from '@/components/admin/SendAlertsButton'
 import { Plus } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -24,9 +25,10 @@ export default async function AdminPage() {
     .order('created_at', { ascending: false })
 
   // All facilities with owner
-  const { data: allFacilities = [] } = await supabase
+  const { data: allFacilitiesRaw } = await supabase
     .from('facilities')
     .select('owner_id, status, days_remaining')
+  const allFacilities = allFacilitiesRaw ?? []
 
   // Group facilities by owner
   const byOwner: Record<string, {
@@ -57,13 +59,17 @@ export default async function AdminPage() {
           <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
           <p className="text-gray-500 text-sm mt-0.5">Manage users and monitor the entire portfolio</p>
         </div>
-        <Link
-          href="/admin/users/create"
-          className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-medium text-sm px-4 py-2.5 rounded-lg transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Create User
-        </Link>
+        <div className="flex items-center gap-2">
+          <SendAlertsButton />
+          <Link
+            href="/admin/users/create"
+            className="inline-flex items-center gap-2 text-white font-medium text-sm px-4 py-2.5 rounded-lg transition-colors"
+            style={{ background: '#034EA2' }}
+          >
+            <Plus className="w-4 h-4" />
+            Create User
+          </Link>
+        </div>
       </div>
 
       {/* Global stats bar */}

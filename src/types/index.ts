@@ -12,6 +12,7 @@ export interface Profile {
   branch: string | null
   phone: string | null
   alert_email: string | null
+  avatar_url: string | null
   is_active: boolean
   created_at: string
   updated_at: string
@@ -25,16 +26,18 @@ export interface Facility {
   customer_name: string
   facility_type: string
   description: string | null
-  expiry_date: string          // ISO date string YYYY-MM-DD
-  status: FacilityStatus       // computed by Postgres
-  days_remaining: number       // computed by Postgres
+  expiry_date: string
+  status: FacilityStatus
+  days_remaining: number
+  amount: number | null
+  currency: string
+  amount_notes: string | null
   owner_id: string
   renewal_count: number
   last_renewed_at: string | null
   notes: string | null
   created_at: string
   updated_at: string
-  // joined
   owner?: Profile
 }
 
@@ -45,12 +48,22 @@ export interface RenewalHistory {
   customer_name: string
   old_expiry_date: string
   new_expiry_date: string
-  extension_days: number       // computed by Postgres
+  extension_days: number
   renewed_by: string
   notes: string | null
   created_at: string
-  // joined
   renewer?: Profile
+}
+
+export interface Notification {
+  id: string
+  user_id: string
+  title: string
+  body: string
+  type: 'facility_added' | 'facility_renewed' | 'facility_deleted' | 'alert_sent'
+  facility_id: string | null
+  is_read: boolean
+  created_at: string
 }
 
 export interface AlertLog {
@@ -64,48 +77,19 @@ export interface AlertLog {
 }
 
 // ─────────────────────────────────────────────
-// Form types
-// ─────────────────────────────────────────────
-
-export interface AddFacilityForm {
-  customer_name: string
-  facility_type: string
-  description?: string
-  expiry_date: string
-  notes?: string
-}
-
-export interface RenewFacilityForm {
-  new_expiry_date: string
-  notes?: string
-}
-
-export interface LoginForm {
-  email: string
-  password: string
-}
-
-export interface ProfileUpdateForm {
-  full_name: string
-  branch?: string
-  phone?: string
-  alert_email?: string
-}
-
-// ─────────────────────────────────────────────
 // Dashboard summary types
 // ─────────────────────────────────────────────
 
 export interface DashboardStats {
   total: number
   active: number
-  warning: number    // ≤ 90 days
-  critical: number   // ≤ 30 days
+  warning: number
+  critical: number
   expired: number
 }
 
 export interface ExpiryChartPoint {
-  month: string      // e.g. "Apr 2025"
+  month: string
   count: number
 }
 
@@ -125,5 +109,7 @@ export const FACILITY_TYPES = [
   'Trade Finance',
   'Other',
 ] as const
+
+export const CURRENCIES = ['USD', 'EUR', 'GBP',  'RWF'] as const
 
 export type FacilityType = typeof FACILITY_TYPES[number]

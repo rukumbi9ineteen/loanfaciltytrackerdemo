@@ -3,8 +3,8 @@ import type { Facility, Profile } from '@/types'
 import { formatDate } from './utils'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-const FROM   = process.env.RESEND_FROM_EMAIL ?? 'alerts@loan-tracker.com'
-const BANK   = process.env.NEXT_PUBLIC_BANK_NAME ?? 'Your Bank'
+const FROM   = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev'
+const BANK   = process.env.NEXT_PUBLIC_BANK_NAME ?? 'bank of kigali'
 
 // ─────────────────────────────────────────────
 // Build email HTML
@@ -93,6 +93,15 @@ function buildEmailHtml(
         </thead>
         <tbody>${tableRows}</tbody>
       </table>
+    </div>
+
+    <!-- Reminder -->
+    <div style="background:#fffbeb;border-top:1px solid #fde68a;padding:16px 32px">
+      <p style="margin:0;font-size:13px;color:#92400e;font-weight:600">📝 Daily Reminder</p>
+      <p style="margin:6px 0 0;font-size:12px;color:#b45309;line-height:1.6">
+        Please remember to add any new loan facilities processed yesterday into the Facility Tracker so your portfolio stays up to date.
+        Keeping records current ensures timely renewals and avoids expiry surprises.
+      </p>
     </div>
 
     <!-- Footer -->

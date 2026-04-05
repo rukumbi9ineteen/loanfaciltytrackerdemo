@@ -1,15 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard,
-  FileText,
-  BarChart3,
-  Settings,
-  Users,
-  Building2,
-  ChevronRight,
+  LayoutDashboard, FileText, BarChart3,
+  Settings, Users, ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UserRole } from '@/types'
@@ -22,36 +18,35 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard',   href: '/dashboard',   icon: LayoutDashboard },
-  { label: 'Facilities',  href: '/facilities',  icon: FileText },
-  { label: 'Reports',     href: '/reports',     icon: BarChart3 },
-  { label: 'Admin Panel', href: '/admin',       icon: Users,          adminOnly: true },
-  { label: 'Settings',    href: '/settings',    icon: Settings },
+  { label: 'Dashboard',   href: '/dashboard',  icon: LayoutDashboard },
+  { label: 'Facilities',  href: '/facilities', icon: FileText },
+  { label: 'Reports',     href: '/reports',    icon: BarChart3 },
+  { label: 'Admin Panel', href: '/admin',      icon: Users, adminOnly: true },
+  { label: 'Settings',    href: '/settings',   icon: Settings },
 ]
 
 export default function Sidebar({ role }: { role: UserRole }) {
   const pathname = usePathname()
-
-  const visibleItems = NAV_ITEMS.filter(
-    item => !item.adminOnly || role === 'admin'
-  )
+  const visibleItems = NAV_ITEMS.filter(item => !item.adminOnly || role === 'admin')
 
   return (
-    <aside className="w-64 bg-blue-900 text-white flex flex-col h-full">
-      {/* Brand */}
-      <div className="p-5 border-b border-blue-800">
+    <aside className="w-64 flex flex-col h-full" style={{ background: '#011B39' }}>
+      {/* Brand / Logo */}
+      <div className="px-5 py-5 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Building2 className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white/10 flex items-center justify-center">
+            <Image src="/bk_logo.jpeg" alt="BK Logo" width={40} height={40} className="object-contain" />
           </div>
           <div>
-            <p className="font-bold text-sm leading-tight">Facility Tracker</p>
-            <p className="text-blue-300 text-xs capitalize">{role === 'admin' ? 'Administrator' : 'Relationship Officer'}</p>
+            <p className="font-bold text-white text-sm leading-tight">Bk Loan Facility Expiration Tracker</p>
+            <p className="text-xs mt-0.5" style={{ color: '#EB9C20' }}>
+              {role === 'admin' ? 'Administrator' : 'Relationship Officer'}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Nav */}
+      {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-1">
         {visibleItems.map(item => {
           const Icon = item.icon
@@ -61,11 +56,12 @@ export default function Sidebar({ role }: { role: UserRole }) {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group',
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group',
                 isActive
-                  ? 'bg-blue-700 text-white'
-                  : 'text-blue-200 hover:bg-blue-800 hover:text-white'
+                  ? 'text-white'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
               )}
+              style={isActive ? { background: '#034EA2' } : {}}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
               <span className="flex-1">{item.label}</span>
@@ -76,9 +72,9 @@ export default function Sidebar({ role }: { role: UserRole }) {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-blue-800">
-        <p className="text-blue-400 text-xs text-center">
-          © {new Date().getFullYear()} Facility Tracker
+      <div className="p-4 border-t border-white/10">
+        <p className="text-white/30 text-xs text-center">
+          © {new Date().getFullYear()} Bank Of Kigali
         </p>
       </div>
     </aside>
