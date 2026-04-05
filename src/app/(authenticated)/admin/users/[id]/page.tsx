@@ -18,11 +18,12 @@ export default async function AdminUserDetailPage({ params }: { params: { id: st
     .from('profiles').select('*').eq('id', params.id).single()
   if (!targetProfile) notFound()
 
-  const { data: facilities = [] } = await supabase
+  const { data: facilitiesRaw } = await supabase
     .from('facilities')
     .select('id, facility_ref, customer_name, expiry_date, status, days_remaining')
     .eq('owner_id', params.id)
     .order('days_remaining', { ascending: true })
+  const facilities = facilitiesRaw ?? []
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

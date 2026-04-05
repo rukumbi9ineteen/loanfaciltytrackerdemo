@@ -34,7 +34,8 @@ export default async function FacilitiesPage({
     )
   }
 
-  const { data: facilities = [] } = await query
+  const { data: facilitiesRaw } = await query
+  const facilities = facilitiesRaw ?? []
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">

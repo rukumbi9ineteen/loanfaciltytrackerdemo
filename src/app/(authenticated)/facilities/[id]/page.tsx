@@ -21,11 +21,12 @@ export default async function FacilityDetailPage({ params }: { params: { id: str
 
   if (!facility) notFound()
 
-  const { data: history = [] } = await supabase
+  const { data: historyRaw } = await supabase
     .from('renewal_history')
     .select('*, renewer:profiles(full_name)')
     .eq('facility_id', params.id)
     .order('created_at', { ascending: false })
+  const history = historyRaw ?? []
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

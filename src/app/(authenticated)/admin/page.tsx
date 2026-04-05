@@ -19,10 +19,11 @@ export default async function AdminPage() {
   if (myProfile?.role !== 'admin') redirect('/dashboard')
 
   // All R.O. profiles
-  const { data: profiles = [] } = await supabase
+  const { data: profilesRaw } = await supabase
     .from('profiles')
     .select('*')
     .order('created_at', { ascending: false })
+  const profiles = profilesRaw ?? []
 
   // All facilities with owner
   const { data: allFacilitiesRaw } = await supabase

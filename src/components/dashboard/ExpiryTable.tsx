@@ -41,8 +41,7 @@ export default function ExpiryTable({ facilities, showOwner, highlight }: Props)
                 <td className="px-4 py-3 text-gray-600">{f.facility_type}</td>
                 {showOwner && (
                   <td className="px-4 py-3 text-gray-600">
-                    {/* @ts-expect-error: joined field */}
-                    {f.owner?.full_name ?? '—'}
+                    {(f as any).owner?.full_name ?? '—'}
                   </td>
                 )}
                 <td className="px-4 py-3 text-gray-600">{formatDate(f.expiry_date)}</td>

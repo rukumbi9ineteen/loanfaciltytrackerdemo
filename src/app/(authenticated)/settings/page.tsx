@@ -14,12 +14,13 @@ export default async function SettingsPage() {
     .from('profiles').select('*').eq('id', user.id).single()
 
   // Fetch recent alert log
-  const { data: alertLog = [] } = await supabase
+  const { data: alertLogRaw } = await supabase
     .from('alert_log')
     .select('*')
     .eq('owner_id', user.id)
     .order('sent_at', { ascending: false })
     .limit(5)
+  const alertLog = alertLogRaw ?? []
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

@@ -109,8 +109,7 @@ export default function FacilitiesTable({
                   <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate">{f.description ?? '—'}</td>
                   {showOwner && (
                     <td className="px-4 py-3 text-gray-600">
-                      {/* @ts-expect-error: joined */}
-                      {f.owner?.full_name ?? '—'}
+                      {(f as any).owner?.full_name ?? '—'}
                     </td>
                   )}
                   <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(f.expiry_date)}</td>
