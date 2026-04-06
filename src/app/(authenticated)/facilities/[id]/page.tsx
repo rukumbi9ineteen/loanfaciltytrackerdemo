@@ -1,14 +1,119 @@
 import { createClient } from '@/lib/supabase/server'
-import { notFound, redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatDate, formatDateTime, STATUS_COLORS, cn } from '@/lib/utils'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Trash2, ArrowLeftRight, AlertCircle } from 'lucide-react'
 import DeleteFacilityButton from '@/components/facilities/DeleteFacilityButton'
 import TransferFacilityButton from '@/components/admin/TransferFacilityButton'
 import type { FacilityStatus } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
+// ─── Graceful "facility not accessible" banner ───────────────────────────────
+function FacilityNotAvailable({
+  type,
+  body,
+  facilityId,
+}: {
+  type?: string
+  body?: string
+  facilityId: string
+}) {
+  const isDeleted     = type === 'facility_deleted'
+  const isTransferred = type === 'facility_transferred'
+
+  const icon = isDeleted ? (
+    <Trash2 className="w-8 h-8 text-red-400" />
+  ) : isTransferred ? (
+    <ArrowLeftRight className="w-8 h-8 text-purple-400" />
+  ) : (
+    <AlertCircle className="w-8 h-8 text-gray-400" />
+  )
+
+  const iconBg = isDeleted
+    ? 'bg-red-50 ring-red-100'
+    : isTransferred
+    ? 'bg-purple-50 ring-purple-100'
+    : 'bg-gray-50 ring-gray-100'
+
+  const heading = isDeleted
+    ? 'This facility has been deleted'
+    : isTransferred
+    ? 'This facility has been transferred'
+    : 'Facility not accessible'
+
+  const detail = body ?? (
+    isDeleted
+      ? 'This facility was permanently removed and is no longer available.'
+      : isTransferred
+      ? 'This facility was assigned to another Relationship Officer.'
+      : 'You may not have permission to view this facility, or it no longer exists.'
+  )
+
+  return (
+    <div className="max-w-3xl mx-auto">
+      <Link href="/facilities" className="text-sm text-gray-500 hover:text-gray-700">
+        ← Back to Facilities
+      </Link>
+
+      <div className={cn(
+        'mt-6 rounded-2xl border p-8 sm:p-12 text-center',
+        isDeleted
+          ? 'bg-red-50/40 border-red-100'
+          : isTransferred
+          ? 'bg-purple-50/40 border-purple-100'
+          : 'bg-gray-50 border-gray-200'
+      )}>
+        {/* Icon */}
+        <div className={cn(
+          'w-16 h-16 rounded-2xl ring-4 flex items-center justify-center mx-auto mb-5',
+          iconBg
+        )}>
+          {icon}
+        </div>
+
+        {/* Heading */}
+        <h2 className="text-xl font-bold text-gray-900 mb-2">{heading}</h2>
+
+        {/* Detail from the original notification */}
+        <p className="text-sm text-gray-500 max-w-md mx-auto leading-relaxed">{detail}</p>
+
+        {/* Status chip */}
+        <div className="flex justify-center mt-4">
+          <span className={cn(
+            'inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full',
+            isDeleted
+              ? 'bg-red-100 text-red-700'
+              : isTransferred
+              ? 'bg-purple-100 text-purple-700'
+              : 'bg-gray-100 text-gray-600'
+          )}>
+            {isDeleted ? '🗑️ Deleted' : isTransferred ? '🔀 Transferred' : '⚠️ Not found'}
+          </span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
+          <Link
+            href="/notifications"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 transition"
+          >
+            View Notifications
+          </Link>
+          <Link
+            href="/facilities"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition"
+            style={{ background: '#034EA2' }}
+          >
+            Back to Facilities
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default async function FacilityDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -25,7 +130,27 @@ export default async function FacilityDetailPage({ params }: { params: { id: str
     .eq('id', params.id)
     .single()
 
-  if (!facility) notFound()
+  // ── Facility not found or not accessible ──
+  if (!facility) {
+    // Check the user's notifications to explain why
+    const { data: relatedNotifs } = await supabase
+      .from('notifications')
+      .select('type, body')
+      .eq('facility_id', params.id)
+      .eq('user_id', user.id)
+      .in('type', ['facility_deleted', 'facility_transferred'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    const reason = relatedNotifs?.[0]
+    return (
+      <FacilityNotAvailable
+        type={reason?.type}
+        body={reason?.body}
+        facilityId={params.id}
+      />
+    )
+  }
 
   const { data: historyRaw } = await supabase
     .from('renewal_history')

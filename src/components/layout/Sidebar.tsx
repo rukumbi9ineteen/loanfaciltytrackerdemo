@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, FileText, BarChart3,
-  Settings, Users, ChevronRight,
+  Settings, Users, ChevronRight, Bell,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UserRole } from '@/types'
@@ -18,11 +18,12 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard',   href: '/dashboard',  icon: LayoutDashboard },
-  { label: 'Facilities',  href: '/facilities', icon: FileText },
-  { label: 'Reports',     href: '/reports',    icon: BarChart3 },
-  { label: 'Admin Panel', href: '/admin',      icon: Users, adminOnly: true },
-  { label: 'Settings',    href: '/settings',   icon: Settings },
+  { label: 'Dashboard',     href: '/dashboard',      icon: LayoutDashboard },
+  { label: 'Facilities',    href: '/facilities',     icon: FileText },
+  { label: 'Reports',       href: '/reports',        icon: BarChart3 },
+  { label: 'Notifications', href: '/notifications',  icon: Bell },
+  { label: 'Admin Panel',   href: '/admin',          icon: Users, adminOnly: true },
+  { label: 'Settings',      href: '/settings',       icon: Settings },
 ]
 
 export default function Sidebar({

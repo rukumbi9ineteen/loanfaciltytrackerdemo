@@ -171,7 +171,7 @@ export default function NotificationsInbox({
           <p className="text-sm text-gray-500 mt-0.5">
             {unreadCount > 0
               ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`
-              : 'You're all caught up!'}
+              : "You're all caught up!"}
           </p>
         </div>
 
@@ -304,18 +304,46 @@ export default function NotificationsInbox({
                   </p>
 
                   {/* Footer actions */}
-                  <div className="flex items-center gap-3 mt-3">
-                    {n.facility_id && (
+                  <div className="flex items-center gap-3 mt-3 flex-wrap">
+                    {/* Facility link — shown for all types that carry a facility_id */}
+                    {n.facility_id ? (
                       <Link
                         href={`/facilities/${n.facility_id}`}
                         onClick={() => { if (!n.is_read) markOneRead(n.id) }}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition"
-                        style={{ background: '#034EA2', color: '#fff' }}
+                        className={cn(
+                          'inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition',
+                          n.type === 'facility_deleted'
+                            ? 'bg-red-50 text-red-700 hover:bg-red-100'
+                            : n.type === 'facility_transferred'
+                            ? 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                            : 'text-white hover:opacity-90'
+                        )}
+                        style={
+                          n.type !== 'facility_deleted' && n.type !== 'facility_transferred'
+                            ? { background: '#034EA2' }
+                            : {}
+                        }
                       >
                         <ExternalLink className="w-3 h-3" />
-                        View Facility
+                        {n.type === 'facility_deleted'
+                          ? 'View deleted facility'
+                          : n.type === 'facility_transferred'
+                          ? 'View transferred facility'
+                          : 'View facility details'}
+                      </Link>
+                    ) : (
+                      /* alert_sent has no specific facility — link to the full list */
+                      <Link
+                        href="/facilities"
+                        onClick={() => { if (!n.is_read) markOneRead(n.id) }}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition hover:opacity-90"
+                        style={{ background: '#034EA2' }}
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        View all facilities
                       </Link>
                     )}
+
                     {!n.is_read && (
                       <button
                         onClick={() => markOneRead(n.id)}

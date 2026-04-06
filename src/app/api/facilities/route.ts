@@ -61,10 +61,11 @@ export async function DELETE(request: NextRequest) {
   const notifyIds = Array.from(new Set([facility.owner_id, ...(admins ?? []).map((a: any) => a.id)]))
 
   await createNotifications({
-    userIds: notifyIds,
-    title:   `${actorName} deleted a facility`,
-    body:    `${facility.customer_name} — ${facility.facility_type} (${facility.facility_ref}) was deleted`,
-    type:    'facility_deleted',
+    userIds:    notifyIds,
+    title:      `${actorName} deleted a facility`,
+    body:       `${facility.customer_name} — ${facility.facility_type} (${facility.facility_ref}) was permanently deleted`,
+    type:       'facility_deleted',
+    facilityId: id,   // keep the ID so the inbox can link to the deleted-state page
   })
 
   return NextResponse.json({ success: true })
