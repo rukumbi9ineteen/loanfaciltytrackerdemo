@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { cn, formatDate, STATUS_COLORS } from '@/lib/utils'
-import { Search, RefreshCw, RotateCcw } from 'lucide-react'
+import { Search, RefreshCw, RotateCcw, ShieldX } from 'lucide-react'
 import type { Facility, FacilityStatus } from '@/types'
 
 const STATUSES: { value: string; label: string }[] = [
@@ -127,12 +127,20 @@ export default function FacilitiesTable({
                     </span>
                   </td>
                   <td className="px-3 py-3">
-                    <span className={cn(
-                      'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border',
-                      STATUS_COLORS[f.status as FacilityStatus]
-                    )}>
-                      {f.status}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className={cn(
+                        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border',
+                        STATUS_COLORS[f.status as FacilityStatus]
+                      )}>
+                        {f.status}
+                      </span>
+                      {(f as any).insurance?.length === 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-600 border border-red-200 whitespace-nowrap">
+                          <ShieldX className="w-2.5 h-2.5" />
+                          No Insurance
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="hidden md:table-cell px-3 py-3 text-center text-gray-500 text-xs">{f.renewal_count}</td>
                   <td className="px-3 py-3">

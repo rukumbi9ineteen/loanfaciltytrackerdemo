@@ -14,6 +14,9 @@ const TYPE_ICONS: Record<Notification['type'], string> = {
   facility_deleted:     '🗑️',
   alert_sent:           '📧',
   facility_transferred: '🔀',
+  insurance_added:      '🛡️',
+  insurance_renewed:    '🛡️',
+  insurance_deleted:    '⚠️',
 }
 
 export default function NotificationBell({ userId }: { userId: string }) {

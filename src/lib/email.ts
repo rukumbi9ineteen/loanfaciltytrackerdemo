@@ -1,6 +1,10 @@
 import { Resend } from 'resend'
-import type { Facility, Profile } from '@/types'
+import type { Facility, Profile, FacilityInsurance } from '@/types'
 import { formatDate } from './utils'
+
+type InsuranceWithFacility = FacilityInsurance & {
+  facility: { facility_ref: string; customer_name: string; facility_type: string } | null
+}
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM   = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev'
@@ -13,7 +17,9 @@ const BANK   = process.env.NEXT_PUBLIC_BANK_NAME ?? 'bank of kigali'
 function buildEmailHtml(
   officer: Profile,
   expiring: Facility[],
-  expired: Facility[]
+  expired: Facility[],
+  expiringIns: InsuranceWithFacility[] = [],
+  missingIns: { facility_ref: string; customer_name: string }[] = []
 ): string {
   const allFacilities = [...expired, ...expiring]
 
@@ -37,9 +43,11 @@ function buildEmailHtml(
     `
   }).join('')
 
-  const expiredCount  = expired.length
-  const criticalCount = expiring.filter(f => f.status === 'CRITICAL').length
-  const warningCount  = expiring.filter(f => f.status === 'WARNING').length
+  const expiredCount      = expired.length
+  const criticalCount     = expiring.filter(f => f.status === 'CRITICAL').length
+  const warningCount      = expiring.filter(f => f.status === 'WARNING').length
+  const insExpiringCount  = expiringIns.length
+  const insMissingCount   = missingIns.length
 
   return `
 <!DOCTYPE html>
@@ -75,6 +83,14 @@ function buildEmailHtml(
           <p style="margin:0;font-size:20px;font-weight:700;color:#ca8a04">${warningCount}</p>
           <p style="margin:2px 0 0;font-size:11px;color:#713f12">Warning (≤90d)</p>
         </div>` : ''}
+        ${insExpiringCount > 0 ? `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 16px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#c2410c">${insExpiringCount}</p>
+          <p style="margin:2px 0 0;font-size:11px;color:#9a3412">Ins. Expiring</p>
+        </div>` : ''}
+        ${insMissingCount > 0 ? `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 16px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#dc2626">${insMissingCount}</p>
+          <p style="margin:2px 0 0;font-size:11px;color:#991b1b">No Insurance</p>
+        </div>` : ''}
       </div>
     </div>
 
@@ -94,6 +110,62 @@ function buildEmailHtml(
         <tbody>${tableRows}</tbody>
       </table>
     </div>
+
+    ${expiringIns.length > 0 ? `
+    <!-- Insurance Expiring Soon -->
+    <div style="padding:0 32px 28px">
+      <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#c2410c">🛡️ Insurance Policies Expiring Soon</p>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #fed7aa;border-radius:8px;overflow:hidden">
+        <thead>
+          <tr style="background:#fff7ed">
+            <th style="padding:8px 12px;text-align:left;font-size:11px;color:#9a3412;text-transform:uppercase;font-weight:600;border-bottom:1px solid #fed7aa">Facility</th>
+            <th style="padding:8px 12px;text-align:left;font-size:11px;color:#9a3412;text-transform:uppercase;font-weight:600;border-bottom:1px solid #fed7aa">Provider</th>
+            <th style="padding:8px 12px;text-align:left;font-size:11px;color:#9a3412;text-transform:uppercase;font-weight:600;border-bottom:1px solid #fed7aa">Type</th>
+            <th style="padding:8px 12px;text-align:left;font-size:11px;color:#9a3412;text-transform:uppercase;font-weight:600;border-bottom:1px solid #fed7aa">Expiry</th>
+            <th style="padding:8px 12px;text-align:left;font-size:11px;color:#9a3412;text-transform:uppercase;font-weight:600;border-bottom:1px solid #fed7aa">Days</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${expiringIns.map(ins => `
+          <tr style="background:${(ins.days_remaining ?? 0) <= 30 ? '#fff7ed' : '#fffbeb'}">
+            <td style="padding:8px 12px;font-size:12px;color:#111827">
+              <div style="font-weight:500">${ins.facility?.customer_name ?? '—'}</div>
+              <div style="font-family:monospace;font-size:11px;color:#6b7280">${ins.facility?.facility_ref ?? '—'}</div>
+            </td>
+            <td style="padding:8px 12px;font-size:12px;color:#374151">${ins.provider}</td>
+            <td style="padding:8px 12px;font-size:12px;color:#374151">${ins.insurance_type}</td>
+            <td style="padding:8px 12px;font-size:12px;color:#374151">${formatDate(ins.expiry_date)}</td>
+            <td style="padding:8px 12px;font-size:12px;font-weight:600;color:${(ins.days_remaining ?? 0) <= 30 ? '#ea580c' : '#ca8a04'}">${ins.days_remaining}d</td>
+          </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    ` : ''}
+
+    ${missingIns.length > 0 ? `
+    <!-- Missing Insurance -->
+    <div style="padding:0 32px 28px">
+      <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#dc2626">⚠️ Facilities Missing Insurance (Compliance Risk)</p>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #fecaca;border-radius:8px;overflow:hidden">
+        <thead>
+          <tr style="background:#fef2f2">
+            <th style="padding:8px 12px;text-align:left;font-size:11px;color:#991b1b;text-transform:uppercase;font-weight:600;border-bottom:1px solid #fecaca">Ref</th>
+            <th style="padding:8px 12px;text-align:left;font-size:11px;color:#991b1b;text-transform:uppercase;font-weight:600;border-bottom:1px solid #fecaca">Customer</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${missingIns.map(f => `
+          <tr style="background:#fef2f2">
+            <td style="padding:8px 12px;font-size:12px;font-family:monospace;color:#dc2626">${f.facility_ref}</td>
+            <td style="padding:8px 12px;font-size:12px;font-weight:500;color:#111827">${f.customer_name}</td>
+          </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <p style="margin:8px 0 0;font-size:12px;color:#dc2626">Please add insurance to these facilities as soon as possible to remain compliant.</p>
+    </div>
+    ` : ''}
 
     <!-- Reminder -->
     <div style="background:#fffbeb;border-top:1px solid #fde68a;padding:16px 32px">
@@ -308,23 +380,34 @@ export async function sendTransferEmails(params: {
 export async function sendFacilityAlert(
   officer: Profile,
   expiring: Facility[],
-  expired: Facility[]
+  expired: Facility[],
+  expiringIns: InsuranceWithFacility[] = [],
+  missingIns: { facility_ref: string; customer_name: string }[] = []
 ): Promise<{ success: boolean; error?: string }> {
   const recipient = officer.alert_email || officer.email
-  const allCount  = expiring.length + expired.length
+  const allCount  = expiring.length + expired.length + expiringIns.length + missingIns.length
 
   if (allCount === 0) {
     return { success: true }  // nothing to send
   }
 
-  const subject = `[${BANK}] Facility Alert: ${expired.length > 0 ? `${expired.length} expired, ` : ''}${expiring.filter(f => f.status === 'CRITICAL').length} critical, ${expiring.filter(f => f.status === 'WARNING').length} warning`
+  const parts: string[] = []
+  if (expired.length > 0)   parts.push(`${expired.length} expired`)
+  if (expiring.filter(f => f.status === 'CRITICAL').length > 0)
+    parts.push(`${expiring.filter(f => f.status === 'CRITICAL').length} critical`)
+  if (expiring.filter(f => f.status === 'WARNING').length > 0)
+    parts.push(`${expiring.filter(f => f.status === 'WARNING').length} warning`)
+  if (expiringIns.length > 0)  parts.push(`${expiringIns.length} insurance expiring`)
+  if (missingIns.length > 0)   parts.push(`${missingIns.length} missing insurance`)
+
+  const subject = `[${BANK}] Daily Alert: ${parts.join(', ')}`
 
   try {
     await resend.emails.send({
       from: FROM,
       to:   recipient,
       subject,
-      html: buildEmailHtml(officer, expiring, expired),
+      html: buildEmailHtml(officer, expiring, expired, expiringIns, missingIns),
     })
     return { success: true }
   } catch (err: any) {

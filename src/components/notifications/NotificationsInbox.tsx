@@ -13,6 +13,9 @@ const TYPE_ICONS: Record<Notification['type'], string> = {
   facility_deleted:     '🗑️',
   alert_sent:           '📧',
   facility_transferred: '🔀',
+  insurance_added:      '🛡️',
+  insurance_renewed:    '🛡️',
+  insurance_deleted:    '⚠️',
 }
 
 const TYPE_LABELS: Record<Notification['type'], string> = {
@@ -21,6 +24,9 @@ const TYPE_LABELS: Record<Notification['type'], string> = {
   facility_deleted:     'Deleted',
   alert_sent:           'Alert',
   facility_transferred: 'Transferred',
+  insurance_added:      'Insurance',
+  insurance_renewed:    'Ins. Renewed',
+  insurance_deleted:    'Ins. Removed',
 }
 
 const TYPE_BADGE_COLORS: Record<Notification['type'], string> = {
@@ -29,12 +35,19 @@ const TYPE_BADGE_COLORS: Record<Notification['type'], string> = {
   facility_deleted:     'bg-red-50 text-red-700 ring-red-200',
   alert_sent:           'bg-amber-50 text-amber-700 ring-amber-200',
   facility_transferred: 'bg-purple-50 text-purple-700 ring-purple-200',
+  insurance_added:      'bg-teal-50 text-teal-700 ring-teal-200',
+  insurance_renewed:    'bg-cyan-50 text-cyan-700 ring-cyan-200',
+  insurance_deleted:    'bg-orange-50 text-orange-700 ring-orange-200',
 }
 
-type FilterTab = 'all' | 'unread' | 'facilities' | 'alerts'
+type FilterTab = 'all' | 'unread' | 'facilities' | 'alerts' | 'insurance'
 
 const FACILITY_TYPES: Notification['type'][] = [
   'facility_added', 'facility_renewed', 'facility_deleted', 'facility_transferred',
+]
+
+const INSURANCE_TYPES: Notification['type'][] = [
+  'insurance_added', 'insurance_renewed', 'insurance_deleted',
 ]
 
 export default function NotificationsInbox({
@@ -140,6 +153,7 @@ export default function NotificationsInbox({
     if (activeFilter === 'unread')     return !n.is_read
     if (activeFilter === 'facilities') return FACILITY_TYPES.includes(n.type)
     if (activeFilter === 'alerts')     return n.type === 'alert_sent'
+    if (activeFilter === 'insurance')  return INSURANCE_TYPES.includes(n.type)
     return true
   })
 
@@ -147,6 +161,7 @@ export default function NotificationsInbox({
     { key: 'all',        label: 'All',        count: notifications.length },
     { key: 'unread',     label: 'Unread',     count: unreadCount },
     { key: 'facilities', label: 'Facilities', count: notifications.filter(n => FACILITY_TYPES.includes(n.type)).length },
+    { key: 'insurance',  label: 'Insurance',  count: notifications.filter(n => INSURANCE_TYPES.includes(n.type)).length },
     { key: 'alerts',     label: 'Alerts',     count: notifications.filter(n => n.type === 'alert_sent').length },
   ]
 
@@ -316,10 +331,12 @@ export default function NotificationsInbox({
                             ? 'bg-red-50 text-red-700 hover:bg-red-100'
                             : n.type === 'facility_transferred'
                             ? 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                            : INSURANCE_TYPES.includes(n.type)
+                            ? 'bg-teal-50 text-teal-700 hover:bg-teal-100'
                             : 'text-white hover:opacity-90'
                         )}
                         style={
-                          n.type !== 'facility_deleted' && n.type !== 'facility_transferred'
+                          n.type !== 'facility_deleted' && n.type !== 'facility_transferred' && !INSURANCE_TYPES.includes(n.type)
                             ? { background: '#034EA2' }
                             : {}
                         }
@@ -329,6 +346,8 @@ export default function NotificationsInbox({
                           ? 'View deleted facility'
                           : n.type === 'facility_transferred'
                           ? 'View transferred facility'
+                          : INSURANCE_TYPES.includes(n.type)
+                          ? 'View insurance'
                           : 'View facility details'}
                       </Link>
                     ) : (

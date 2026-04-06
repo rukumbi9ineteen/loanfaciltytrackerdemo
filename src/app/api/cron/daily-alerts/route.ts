@@ -40,35 +40,54 @@ export async function GET(request: NextRequest) {
 
     for (const officer of officers) {
       // Get their expiring + expired facilities (within 90 days, or already expired)
-      const { data: expiring } = await supabase
-        .from('facilities')
-        .select('*')
-        .eq('owner_id', officer.id)
-        .gte('days_remaining', 0)
-        .lte('days_remaining', 90)
-        .order('days_remaining', { ascending: true })
+      const [expiringRes, expiredRes, expiringInsRes, missingInsRes] = await Promise.all([
+        supabase
+          .from('facilities')
+          .select('*')
+          .eq('owner_id', officer.id)
+          .gte('days_remaining', 0)
+          .lte('days_remaining', 90)
+          .order('days_remaining', { ascending: true }),
+        supabase
+          .from('facilities')
+          .select('*')
+          .eq('owner_id', officer.id)
+          .lt('days_remaining', 0)
+          .order('days_remaining', { ascending: true }),
+        // Insurance expiring within 90 days on this officer's facilities
+        supabase
+          .from('facility_insurance')
+          .select('*, facility:facilities!inner(facility_ref, customer_name, facility_type, owner_id)')
+          .eq('facilities.owner_id', officer.id)
+          .gte('days_remaining', 0)
+          .lte('days_remaining', 90)
+          .order('days_remaining', { ascending: true }),
+        // Facilities missing insurance
+        supabase
+          .from('facilities')
+          .select('id, facility_ref, customer_name, insurance:facility_insurance(id)')
+          .eq('owner_id', officer.id),
+      ])
 
-      const { data: expired } = await supabase
-        .from('facilities')
-        .select('*')
-        .eq('owner_id', officer.id)
-        .lt('days_remaining', 0)
-        .order('days_remaining', { ascending: true })
+      const expiring     = expiringRes.data    ?? []
+      const expired      = expiredRes.data     ?? []
+      const expiringIns  = expiringInsRes.data ?? []
+      const missingInsFacs = (missingInsRes.data ?? []).filter((f: any) => f.insurance?.length === 0)
 
-      const allFacilities = [...(expired ?? []), ...(expiring ?? [])]
+      const allFacilities = [...expired, ...expiring]
 
-      if (allFacilities.length === 0) {
+      if (allFacilities.length === 0 && expiringIns.length === 0 && missingInsFacs.length === 0) {
         results.push({ officer: officer.email, sent: false, count: 0 })
         continue
       }
 
-      const { success, error } = await sendFacilityAlert(officer, expiring ?? [], expired ?? [])
+      const { success, error } = await sendFacilityAlert(officer, expiring, expired, expiringIns, missingInsFacs)
 
       // Log to alert_log table
       await supabase.from('alert_log').insert({
         owner_id:       officer.id,
         recipient:      officer.alert_email || officer.email,
-        facility_count: allFacilities.length,
+        facility_count: allFacilities.length + expiringIns.length + missingInsFacs.length,
         status:         success ? 'sent' : 'failed',
         error_msg:      error ?? null,
       })

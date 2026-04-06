@@ -21,7 +21,7 @@ export default async function FacilitiesPage({
 
   let query = supabase
     .from('facilities')
-    .select('*, owner:profiles(full_name, email)')
+    .select('*, owner:profiles(full_name, email), insurance:facility_insurance(id)')
     .order('days_remaining', { ascending: true })
 
   if (searchParams.status && searchParams.status !== 'ALL') {

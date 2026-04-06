@@ -1,6 +1,7 @@
 import { createServiceClient } from './supabase/server'
 
 type NotificationType = 'facility_added' | 'facility_renewed' | 'facility_deleted' | 'alert_sent' | 'facility_transferred'
+                     | 'insurance_added' | 'insurance_renewed' | 'insurance_deleted'
 
 interface NotifyOptions {
   userIds: string[]          // who receives it

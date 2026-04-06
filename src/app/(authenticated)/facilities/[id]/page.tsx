@@ -5,7 +5,8 @@ import { formatDate, formatDateTime, STATUS_COLORS, cn } from '@/lib/utils'
 import { RotateCcw, Trash2, ArrowLeftRight, AlertCircle } from 'lucide-react'
 import DeleteFacilityButton from '@/components/facilities/DeleteFacilityButton'
 import TransferFacilityButton from '@/components/admin/TransferFacilityButton'
-import type { FacilityStatus } from '@/types'
+import InsuranceSection from '@/components/insurance/InsuranceSection'
+import type { FacilityStatus, FacilityInsurance, InsuranceRenewalHistory } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -152,12 +153,24 @@ export default async function FacilityDetailPage({ params }: { params: { id: str
     )
   }
 
-  const { data: historyRaw } = await supabase
-    .from('renewal_history')
-    .select('*, renewer:profiles(full_name)')
-    .eq('facility_id', params.id)
-    .order('created_at', { ascending: false })
-  const history = historyRaw ?? []
+  const [{ data: historyRaw }, { data: insuranceRaw }, { data: insHistoryRaw }] = await Promise.all([
+    supabase.from('renewal_history')
+      .select('*, renewer:profiles(full_name)')
+      .eq('facility_id', params.id)
+      .order('created_at', { ascending: false }),
+    supabase.from('facility_insurance')
+      .select('*')
+      .eq('facility_id', params.id)
+      .order('created_at', { ascending: false }),
+    supabase.from('insurance_renewal_history')
+      .select('*')
+      .eq('facility_id', params.id)
+      .order('created_at', { ascending: false }),
+  ])
+
+  const history        = historyRaw    ?? []
+  const insurance      = (insuranceRaw ?? []) as FacilityInsurance[]
+  const insHistory     = (insHistoryRaw ?? []) as InsuranceRenewalHistory[]
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -250,6 +263,13 @@ export default async function FacilityDetailPage({ params }: { params: { id: str
           <p className="text-sm text-gray-500">{formatDateTime(facility.created_at)}</p>
         </div>
       </div>
+
+      {/* Insurance policies */}
+      <InsuranceSection
+        facilityId={params.id}
+        initialInsurance={insurance}
+        initialHistory={insHistory}
+      />
 
       {/* Renewal history */}
       <div>
