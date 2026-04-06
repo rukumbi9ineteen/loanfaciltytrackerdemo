@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -15,7 +15,8 @@ const schema = z.object({
 })
 type FormData = z.infer<typeof schema>
 
-export default function LoginPage() {
+// ── Inner component that uses useSearchParams ─────────────────────────────────
+function LoginForm() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const supabase     = createClient()
@@ -23,7 +24,7 @@ export default function LoginPage() {
   const [error, setError]   = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const message = searchParams.get('message')
+  const message        = searchParams.get('message')
   const sessionExpired = searchParams.get('reason') === 'session_expired'
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
@@ -39,6 +40,91 @@ export default function LoginPage() {
     router.refresh()
   }
 
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-8">
+      <h2 className="text-2xl font-bold mb-1" style={{ color: '#011B39' }}>Welcome back</h2>
+      <p className="text-gray-500 text-sm mb-6">Sign in to your account to continue</p>
+
+      {message === 'password_changed' && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+          Password updated successfully. Please sign in with your new password.
+        </div>
+      )}
+
+      {sessionExpired && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm flex items-center gap-2">
+          <Lock className="w-4 h-4 flex-shrink-0" />
+          Your session expired due to inactivity. Please sign in again.
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
+          <Lock className="w-4 h-4 flex-shrink-0" />
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1" style={{ color: '#011B39' }}>Email address</label>
+          <input
+            {...register('email')}
+            type="email"
+            autoComplete="email"
+            placeholder="you@domain.com"
+            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 transition"
+            style={{ '--tw-ring-color': '#034EA2' } as React.CSSProperties}
+          />
+          {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1" style={{ color: '#011B39' }}>Password</label>
+          <div className="relative">
+            <input
+              {...register('password')}
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 transition pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+          {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm mt-2"
+          style={{ background: loading ? '#7aabe8' : '#034EA2' }}
+        >
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+              </svg>
+              Signing in...
+            </span>
+          ) : 'Sign In'}
+        </button>
+      </form>
+    </div>
+  )
+}
+
+// ── Page — wraps LoginForm in Suspense (required by Next.js 14) ───────────────
+export default function LoginPage() {
   return (
     <div className="min-h-screen flex" style={{ background: '#F4F5F8' }}>
       {/* Left panel */}
@@ -75,81 +161,14 @@ export default function LoginPage() {
             <Image src="/bk_logo.jpeg" alt="Bk Logo" width={140} height={42} />
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-8">
-            <h2 className="text-2xl font-bold mb-1" style={{ color: '#011B39' }}>Welcome back</h2>
-            <p className="text-gray-500 text-sm mb-6">Sign in to your account to continue</p>
-
-            {message === 'password_changed' && (
-              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                Password updated successfully. Please sign in with your new password.
-              </div>
-            )}
-
-            {sessionExpired && (
-              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm flex items-center gap-2">
-                <Lock className="w-4 h-4 flex-shrink-0" />
-                Your session expired due to inactivity. Please sign in again.
-              </div>
-            )}
-
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
-                <Lock className="w-4 h-4 flex-shrink-0" />
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: '#011B39' }}>Email address</label>
-                <input
-                  {...register('email')}
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@domain.com"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 transition"
-                  style={{ '--tw-ring-color': '#034EA2' } as React.CSSProperties}
-                />
-                {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: '#011B39' }}>Password</label>
-                <div className="relative">
-                  <input
-                    {...register('password')}
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    placeholder="••••••••"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 transition pr-10"
-                  />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" tabIndex={-1}>
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full text-white font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm mt-2"
-                style={{ background: loading ? '#7aabe8' : '#034EA2' }}
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                    </svg>
-                    Signing in...
-                  </span>
-                ) : 'Sign In'}
-              </button>
-            </form>
-          </div>
+          {/* Suspense is required whenever useSearchParams() is used in a page */}
+          <Suspense fallback={
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center text-gray-400 text-sm">
+              Loading...
+            </div>
+          }>
+            <LoginForm />
+          </Suspense>
 
           <p className="text-center text-gray-400 text-xs mt-5">
             Contact your system administrator to reset your password.
