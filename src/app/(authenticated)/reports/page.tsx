@@ -1,9 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import ReportsClient from '@/components/reports/ReportsClient'
-import type { Facility } from '@/types'
+import type { Facility, FacilityInsurance } from '@/types'
 
 export const dynamic = 'force-dynamic'
+
+export type FacilityWithInsurance = Facility & {
+  insurance: Pick<FacilityInsurance, 'id' | 'provider' | 'policy_number' | 'insurance_type' | 'expiry_date' | 'days_remaining' | 'status'>[]
+}
 
 export default async function ReportsPage() {
   const supabase = createClient()
@@ -15,7 +19,7 @@ export default async function ReportsPage() {
 
   const { data: facilities = [] } = await supabase
     .from('facilities')
-    .select('*')
+    .select('*, insurance:facility_insurance(id, provider, policy_number, insurance_type, expiry_date, days_remaining, status)')
     .order('days_remaining', { ascending: true })
 
   return (
@@ -25,7 +29,7 @@ export default async function ReportsPage() {
         <p className="text-gray-500 text-sm mt-0.5">Generate and export facility expiry reports</p>
       </div>
       <ReportsClient
-        facilities={facilities as Facility[]}
+        facilities={facilities as FacilityWithInsurance[]}
         officerName={profile?.full_name ?? ''}
         bankName={process.env.NEXT_PUBLIC_BANK_NAME ?? 'Your Bank'}
       />
