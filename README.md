@@ -1,6 +1,6 @@
 # BK Loan Facility Expiration Tracker
 
-A full-stack, production-ready web application built for **Bank of Kigali** Relationship Officers (R.O.s) and administrators to monitor, manage, and act on loan facility expiration dates — before they become a problem.
+A full-stack, production-grade web application built for **Bank of Kigali** Relationship Officers (R.O.s) and administrators to monitor, manage, and act on loan facility expiration dates — before they become a problem.
 
 ---
 
